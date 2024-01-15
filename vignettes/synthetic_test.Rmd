@@ -11,7 +11,7 @@ output:
     highlight: tango  # specifies the syntax highlighting style
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=TRUE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 # Examples with toy matrix
@@ -22,7 +22,7 @@ knitr::opts_chunk$set(echo = TRUE)
 - **3 = forest**
 
 
-```{r,  message=TRUE, warning=TRUE}
+```{r,  message=FALSE, warning=FALSE}
 # source('/home/matteo/own_data/PoD/jrc/swf_molder/swf_molder.r')
 require(SWFmolder)
 require(terra)
