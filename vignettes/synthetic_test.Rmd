@@ -1,0 +1,309 @@
+---
+title: "SWF molder V2.0 toy examples"
+author: "Marcantonio Matteo"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output: 
+  html_document:
+    toc: true # table of content true
+    toc_depth: 2  # upto three depths of headings (specified by #, ## and ###)
+    number_sections: true  ## if you want number sections at each table header
+    theme: united  # many options for theme, this one is my favorite.
+    highlight: tango  # specifies the syntax highlighting style
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Examples with toy matrix
+8x8 pixel toy matrix made of three land use classes:
+
+- **1 = SWF**
+- **2 = Agriculture**
+- **3 = forest**
+
+
+```{r,  message=TRUE, warning=TRUE}
+# source('/home/matteo/own_data/PoD/jrc/swf_molder/swf_molder.r')
+require(SWFmolder)
+require(terra)
+```
+
+```{r,  message=FALSE, warning=FALSE}
+#Define the toy matrix
+toy.mt <- matrix(c(
+	2,2,2,2,2,2,2,2,
+	2,2,2,2,2,2,2,2,
+	2,2,2,2,2,2,2,2,
+	2,2,2,1,1,2,2,2,
+	2,2,2,2,2,2,2,2,
+	2,2,2,2,2,2,2,2,
+	2,2,2,2,2,2,2,2,
+	3,3,3,3,3,3,3,3), ncol=8, byrow=TRUE)
+
+storage.mode(toy.mt) <- "integer"
+color_map <- c('#ef8a62', '#f7f7f7', '#67a9cf')
+plot(rast(t(toy.mt)), col = color_map, axes = FALSE, box = FALSE, main="Toy matrix", plg=list(legend=c("SWF","Agri","Forest")))
+text(rast(t(toy.mt)), digits=1)
+```
+
+## Simple ortogonal expansion
+- SWF pixel with 1 Agri Neighbour
+- 1 SWF px allocated per iteration
+- Allocation of SWF pixels favours ortogonal Agri neighbours
+
+```{r,  message=FALSE, warning=FALSE}
+iters = 10
+test.1 <- swf.molder(
+Hmatrix = toy.mt, 
+swfCover=0.90, 
+swfCat=1, 
+agriCat=2,
+Q=1, # number of neighbour allocated per iterations
+fDiagonal=FALSE, 
+iterations = iters, 
+kernelCl=ncol(toy.mt), kernelRw=nrow(toy.mt), 
+NNeighbors=1, # number of px that a SWF pixel must have to be selected
+maxDistance = 1, 
+queensCase=TRUE, 
+np=1)
+```
+
+```{r example1,  message=FALSE, warning=FALSE, echo=FALSE}
+# Prepare plot 
+test.1 <- c(list(toy.mt), test.1)
+ncol=3
+
+par(mfrow = c(ceiling(length(test.1)/ncol),ncol) , mai = c(0.1, 0.1, 0.1, 0.1))
+for (i in 1:length(test.1)) {
+	testTemp <- rast(t(test.1[[i]]))
+	plot(testTemp, col = color_map, legend=FALSE, axes = FALSE, box = FALSE, main = paste("Iteration ", i-1))
+	text(testTemp, digits=1)
+}
+```
+
+## Simple diagonal expansion
+- SWF pixel with 1 Agri Neighbour
+- 1 SWF px allocated per iteration
+- Allocation of new SWF pixels favours ortogonal Agri neighbours
+
+```{r,  message=FALSE, warning=FALSE}
+iters = 10
+test.1 <- swf.molder(
+Hmatrix = toy.mt, 
+swfCover=0.90, 
+swfCat=1, 
+agriCat=2,
+fDiagonal=TRUE, # sets preferred direction of expantion 
+Q=1, # number of neighbour allocated per iterations
+iterations = iters, 
+kernelCl=ncol(toy.mt), kernelRw=nrow(toy.mt), 
+NNeighbors=1, # number of px that a SWF pixel must have to be selected
+maxDistance = 1, 
+queensCase=TRUE, 
+np=1)
+```
+```{r example2,  message=FALSE, warning=FALSE, echo=FALSE}
+# Prepare plot 
+test.1 <- c(list(toy.mt), test.1)
+ncol=3
+
+par(mfrow = c(ceiling(length(test.1)/ncol),ncol) , mai = c(0.1, 0.1, 0.1, 0.1))
+for (i in 1:length(test.1)) {
+	testTemp <- rast(t(test.1[[i]]))
+	plot(testTemp, col = color_map, legend=FALSE, axes = FALSE, box = FALSE, main = paste("Iteration ", i-1))
+	text(testTemp, digits=1)
+}
+```
+
+## Simple lateral expansion
+Here lateral expansion is sought chosing only edge pixels and allocatin 1 SWF px per time
+- SWF pixel with 7 Agri Neighbour
+- 1 SWF px allocated per iteration
+- Allocation of new SWF pixels favours *diagonal* Agri neighbours
+
+```{r,  message=FALSE, warning=FALSE}
+iters = 3
+test.1 <- swf.molder(
+Hmatrix = toy.mt, 
+swfCover=0.90, 
+swfCat=1, 
+agriCat=2,
+fDiagonal=FALSE, # sets preferred direction of expantion 
+Q=1, # number of neighbour allocated per iterations
+iterations = iters, 
+kernelCl=ncol(toy.mt), kernelRw=nrow(toy.mt), 
+NNeighbors=7, # number of px that a SWF pixel must have to be selected
+maxDistance = 1, 
+queensCase=FALSE, 
+np=1)
+```
+
+```{r example3,  message=FALSE, warning=FALSE, echo=FALSE}
+# Prepare plot 
+test.1 <- c(list(toy.mt), test.1)
+ncol=2
+
+par(mfrow = c(ceiling(length(test.1)/ncol),ncol) , mai = c(0.1, 0.1, 0.1, 0.1))
+for (i in 1:length(test.1)) {
+	testTemp <- rast(t(test.1[[i]]))
+	plot(testTemp, col = color_map, legend=FALSE, axes = FALSE, box = FALSE, main = paste("Iteration ", i-1))
+	text(testTemp, digits=1)
+}
+```
+
+## Expansion driven by multiple neighbours and SWF allocation, ortogonal
+- SWF pixel with 5 Agri Neighbour
+- 2 SWF px allocated per iteration
+- Allocation of new SWF pixels favours *orthogonal* Agri neighbours
+
+```{r,  message=FALSE, warning=FALSE}
+iters = 10
+test.1 <- swf.molder(
+Hmatrix = toy.mt, 
+swfCover=0.90, 
+swfCat=1, 
+agriCat=2,
+fDiagonal=FALSE, # sets preferred direction of expantion 
+Q=2, # number of neighbour allocated per iterations
+iterations = iters, 
+kernelCl=ncol(toy.mt), kernelRw=nrow(toy.mt), 
+NNeighbors=5, # number of px that a SWF pixel must have to be selected
+maxDistance = 1, 
+queensCase=TRUE, 
+np=1)
+```
+
+```{r example4,  message=FALSE, warning=FALSE, echo=FALSE}
+# Prepare plot 
+test.1 <- c(list(toy.mt), test.1)
+ncol=4
+
+par(mfrow = c(ceiling(length(test.1)/ncol),ncol) , mai = c(0.1, 0.1, 0.1, 0.1))
+for (i in 1:length(test.1)) {
+	testTemp <- rast(t(test.1[[i]]))
+	plot(testTemp, col = color_map, legend=FALSE, axes = FALSE, box = FALSE, main = paste("Iteration ", i-1))
+	text(testTemp, digits=1)
+}
+```
+
+## Expansion driven by multiple neighbours and SWF allocation, diagonal
+- SWF pixel with 5 Agri Neighbour
+- 2 SWF px allocated per iteration
+- Allocation of new SWF pixels favours *diagonal* Agri neighbours
+
+```{r,  message=FALSE, warning=FALSE}
+iters = 10
+test.1 <- swf.molder(
+Hmatrix = toy.mt, 
+swfCover=0.90, 
+swfCat=1, 
+agriCat=2,
+fDiagonal=TRUE, # sets preferred direction of expantion 
+Q=2, # number of neighbour allocated per iterations
+iterations = iters, 
+kernelCl=ncol(toy.mt), kernelRw=nrow(toy.mt), 
+NNeighbors=5, # number of px that a SWF pixel must have to be selected
+maxDistance = 1, 
+queensCase=TRUE, 
+np=1)
+```
+
+```{r example5,  message=FALSE, warning=FALSE, echo=FALSE}
+# Prepare plot 
+test.1 <- c(list(toy.mt), test.1)
+ncol=4
+
+par(mfrow = c(ceiling(length(test.1)/ncol),ncol) , mai = c(0.1, 0.1, 0.1, 0.1))
+for (i in 1:length(test.1)) {
+	testTemp <- rast(t(test.1[[i]]))
+	plot(testTemp, col = color_map, legend=FALSE, axes = FALSE, box = FALSE, main = paste("Iteration ", i-1))
+	text(testTemp, digits=1)
+}
+```
+
+## Expansion following a 1st order "buffer"
+This mimic a "buffer" approach. To obtain it the minimum number of Agri NN for each SWF pixel must be 1 and the number of new allocated SWF pixel has to be 7 which is the maximum number of Agri neighbours that a SWF pixel has in the toy example. Theoretically would be 9.
+
+- SWF pixel with 1 Agri Neighbour
+- 7 SWF px allocated per iteration
+
+```{r,  message=FALSE, warning=FALSE}
+iters = 10
+test.1 <- swf.molder(
+Hmatrix = toy.mt, 
+swfCover=0.90, 
+swfCat=1, 
+agriCat=2,
+fDiagonal=FALSE, # sets preferred direction of expantion 
+Q=7, # number of neighbour allocated per iterations
+iterations = iters, 
+kernelCl=ncol(toy.mt), kernelRw=nrow(toy.mt), 
+NNeighbors=1, #number of px that a SWF pixel must have to be selected 
+maxDistance = 1, 
+queensCase=TRUE, 
+np=1)
+```
+
+```{r example6,  message=FALSE, warning=FALSE, echo=FALSE}
+# Prepare plot 
+test.1 <- c(list(toy.mt), test.1)
+ncol=2
+
+par(mfrow = c(ceiling(length(test.1)/ncol),ncol) , mai = c(0.1, 0.1, 0.1, 0.1))
+for (i in 1:length(test.1)) {
+	testTemp <- rast(t(test.1[[i]]))
+	plot(testTemp, col = color_map, legend=FALSE, axes = FALSE, box = FALSE, main = paste("Iteration ", i-1))
+	text(testTemp, digits=1)
+}
+```
+
+## Expansion following a 2nd order "buffer"
+This mimics a 2nd order "buffer" approach. To obtain it, the minimum number of Agri NN for each SWF pixel must be 1 and the number of new allocated SWF pixel has to be the maximum number of 2nd order Agri neighbours that the SWF pixel has in the toy example (8+16=24).
+
+```{r,  message=FALSE, warning=FALSE}
+# Remaking the toy matrix with only 1 SWF pixel to make it easier to interpret
+toy.mt <- matrix(c(
+	2,2,2,2,2,2,2,2,
+	2,2,2,2,2,2,2,2,
+	2,2,2,2,2,2,2,2,
+	2,2,2,1,2,2,2,2,
+	2,2,2,2,2,2,2,2,
+	2,2,2,2,2,2,2,2,
+	2,2,2,2,2,2,2,2,
+	3,3,3,3,3,3,3,3), ncol=8, byrow=TRUE)
+plot(rast(t(toy.mt)), col = color_map, axes = FALSE, box = FALSE, main="Toy matrix", plg=list(legend=c("SWF","Agri","Forest")))
+text(rast(t(toy.mt)), digits=1)
+```
+
+- SWF pixel with 1 Agri Neighbour
+- 24 SWF px allocated per iteration
+
+```{r,  message=FALSE, warning=FALSE}
+iters = 10
+test.1 <- swf.molder(
+Hmatrix = toy.mt, 
+swfCover=0.90, 
+swfCat=1, 
+agriCat=2,
+fDiagonal=FALSE, # sets preferred direction of expantion 
+Q=24, # number of neighbour allocated per iterations
+iterations = iters, 
+kernelCl=ncol(toy.mt), kernelRw=nrow(toy.mt), 
+NNeighbors=1, #number of px that a SWF pixel must have to be selected 
+maxDistance = 1, 
+queensCase=TRUE, 
+np=1)
+```
+
+```{r example7,  message=FALSE, warning=FALSE, echo=FALSE}
+# Prepare plot 
+test.1 <- c(list(toy.mt), test.1)
+ncol=3
+
+par(mfrow = c(ceiling(length(test.1)/ncol),ncol) , mai = c(0.1, 0.1, 0.1, 0.1))
+for (i in 1:length(test.1)) {
+	testTemp <- rast(t(test.1[[i]]))
+	plot(testTemp, col = color_map, legend=FALSE, axes = FALSE, box = FALSE, main = paste("Iteration ", i-1))
+	text(testTemp, digits=1)
+}
+```

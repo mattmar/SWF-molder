@@ -1,0 +1,33 @@
+Package: SWFmolder
+Type: Package
+Title: A methodology to simulate changes in SWF.
+Version: 0.0.1
+Date:
+Authors@R: c(
+    person("Matteo", "Marcantonio", role = c("aut", "cre"), email = "marcantoniomatteo@gmail.com"),
+    person("Giovanni", "Strona", role = "ctb", email = "one@bla.com"),
+    person("Fernando", "Sedano", role = "ctb", email = "two@bla.com"),
+    person("Marijn", "Van Der Velde", role = "ctb", email = "three@bla.com"))
+Maintainer: Matteo Marcantonio <marcantoniomatteo@gmail.com>
+Description: A methodology to simulate SWF changes.
+Depends: R (>= 4.0.0)
+Imports:
+    terra,
+Suggests: 
+    knitr,
+    imager,
+    proxy,
+    rmarkdown,
+    rasterVis,
+    RColorBrewer,
+    gridExtra,
+    gstat,
+    latticeExtra,
+License: GPL (>= 2)
+Encoding: UTF-8
+LazyData: true
+URL: https://mattmar.github.io/SWF-molder/
+BugReports: https://github.com/mattmar/SWF-molder/issues
+VignetteBuilder: knitr
+Language: en-GB
+RoxygenNote: 7.2.3

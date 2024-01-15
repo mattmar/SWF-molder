@@ -19,6 +19,7 @@
 #' @param queensCase If TRUE, all 8 directions are considered for neighbors; if FALSE, only orthogonal neighbors are considered.
 #' @param np Number of cores for parallel processing.
 #' @param deBug If TRUE, debugging information is provided.
+#' @export
 
 swf.clumper.regular <- function(Hmatrix = null.mt, swfCat, agriCat, foreCat=3, Q, sigma, iterations = 20, kernelCl=20, kernelRw=20, NNeighbors=0, maxDistance = 5, Density="H", queensCase=FALSE, np=1, deBug=FALSE) {
 	matrices.list <- list()
@@ -37,7 +38,7 @@ swf.clumper.regular <- function(Hmatrix = null.mt, swfCat, agriCat, foreCat=3, Q
 		Hedges <- as.matrix(imager::cannyEdges(imager::as.cimg(Bmatrix), sigma=sigma))
 		# image(as.matrix(imager::cannyEdges(as.cimg(as.cimg(Bmatrix)),sigma=2)))
 
-		temp.cl <- mclapply(seq(1, ncolumns, kernelCl), function(cl) {
+		temp.cl <- parallel::mclapply(seq(1, ncolumns, kernelCl), function(cl) {
 			cl_end = min(cl + kernelCl - 1, ncolumns) # if windows exceed columns then columns
 
 			temp.rw <- lapply(seq(1, nrows, kernelRw), function(rw) {
@@ -58,7 +59,7 @@ swf.clumper.regular <- function(Hmatrix = null.mt, swfCat, agriCat, foreCat=3, Q
 				# swf.ed = as.data.frame(which(this.window == swfCat, arr.ind = TRUE))
 				# Reshaffle only if there is at least one 1 and
 				# Reshaffle only if there is at least one non-neighbour 1 (maxDistance is the search radius around each 1)
-				if ( (nrow(swf.ed) != 0 && (nrow(swf.ed) > 1 && nrow(agri.pos) > 1)) && areThereLonely(this.window, NNeighbors, queensCase, maxDistance) ) {
+				if ( (nrow(swf.ed) != 0 && (nrow(swf.ed) > 1 && nrow(agri.pos) > 1)) && areThereLonelyOLD(this.window, NNeighbors, queensCase, maxDistance) ) {
 					if (deBug) cat(paste("Col: ",cl, " Row: ",rw," Nrow swf.ed: ", nrow(swf.ed),"\n"))
 					# Chose a gravity cell which is in a high/low density part of the matrix, this is done using findCell which counts the neighborn in a radius for each cell and chose the one with most/least neighbourns
 					gravity.pos <- findCell(swf.ed, ifelse(kernelCl>kernelRw,kernelCl,kernelRw)/2, Density)
@@ -74,7 +75,7 @@ swf.clumper.regular <- function(Hmatrix = null.mt, swfCat, agriCat, foreCat=3, Q
 					# Otherwise draw a coin to chose between the closest two 0's
 					# agri.fate <- head(agri.pos[order(agri.pos$dist), 1:2], Q)
 					# Find the closest Q number of neighbourns, but give priority to diagonal neigbourns (to avoid straight line)
-					agri.fate <- ClosestDiagonalAgriCell(this.window, agri.pos, gravity.pos, swfCat, agriCat, Q)
+					agri.fate <- ClosestDiagonalAgriCellOLD(this.window, agri.pos, gravity.pos, swfCat, agriCat, Q)
 					# Decide which SWF is going to be moved, now the nth farthest from gravity center and not an edge
 					particle.pos = tail(swf.NOed, nrow(agri.fate))
 
@@ -112,12 +113,12 @@ swf.clumper.regular <- function(Hmatrix = null.mt, swfCat, agriCat, foreCat=3, Q
 #' @param maxDistance Maximum distance to look for neighbors.
 #' @return TRUE if any habitat cell has the specified number of neighbors within the given distance, FALSE otherwise.
 
-areThereLonely <- function(matrix, NNeighbors, queensCase = TRUE, maxDistance = 5) {
+areThereLonelyOLD <- function(matrix, NNeighbors, queensCase = TRUE, maxDistance = 5) {
 	rows <- nrow(matrix)
 	cols <- ncol(matrix)
 
   # Function to count neighbors
-  countNeighbors <- function(r, c) {
+  countNeighborsOLD <- function(r, c) {
   	neighborCount <- 0
   	if (queensCase) {
   		directions <- expand.grid(row = -maxDistance:maxDistance, col = -maxDistance:maxDistance)
@@ -146,7 +147,7 @@ areThereLonely <- function(matrix, NNeighbors, queensCase = TRUE, maxDistance = 
   for (r in 1:rows) {
   	for (c in 1:cols) {
   		if (matrix[r, c] == 1) {
-  			neighbors <- countNeighbors(r, c)
+  			neighbors <- countNeighborsOLD(r, c)
   			if (neighbors == NNeighbors) {
   				return(TRUE)
   			}
@@ -181,7 +182,7 @@ distance <- function(x1, y1, x2, y2) {
 #' @return Coordinates of the chosen cell based on the specified density.
 
 findCell <- function(cells, radius=5, Density="M", deBug=FALSE) {
-    localDensities <- sapply(1:nrow(cells), function(i) countNeighbors(cells[i,], cells, radius))
+    localDensities <- sapply(1:nrow(cells), function(i) countNeighborsOLD(cells[i,], cells, radius))
 
     chosen <- switch(Density,
         "H" = which(localDensities == max(localDensities)),
@@ -212,7 +213,7 @@ findCell <- function(cells, radius=5, Density="M", deBug=FALSE) {
 #' @param radius The radius within which to count neighbors.
 #' @return The count of neighbors within the specified radius.
 
-countNeighbors <- function(cell, cells, radius) {
+countNeighborsOLD <- function(cell, cells, radius) {
 	count <- 0
 	for (i in 1:nrow(cells)) {
 		if (distance(cell$row, cell$col, cells$row[i], cells$col[i]) <= radius && !(cell$row == cells$row[i] && cell$col == cells$col[i])) {
@@ -230,7 +231,7 @@ countNeighbors <- function(cell, cells, radius) {
 resample <- function(x, ...) x[sample.int(length(x), ...)]
 
 # Find the Q closest neighbourns
-ClosestDiagonalAgriCell <- function(matrix, agriCatList, targetPos, swfCat, agriCat, numCells) {
+ClosestDiagonalAgriCellOLD <- function(matrix, agriCatList, targetPos, swfCat, agriCat, numCells) {
     nrows <- nrow(matrix)
     ncols <- ncol(matrix)
     
@@ -257,13 +258,13 @@ ClosestDiagonalAgriCell <- function(matrix, agriCatList, targetPos, swfCat, agri
     }
 
     # Order selected neighbors by distance
-    orderedNeighbors <- orderCellsByDistance(selectedNeighbors, r, c)
+    orderedNeighbors <- orderCellsByDistanceOLD(selectedNeighbors, r, c)
     orderedNeighbors <- orderedNeighbors[1:min(nrow(orderedNeighbors), numCells), ]
 
     return(orderedNeighbors)
 }
 
-orderCellsByDistance <- function(cellList, targetRow, targetCol) {
+orderCellsByDistanceOLD <- function(cellList, targetRow, targetCol) {
     if (nrow(cellList) == 0) {
         return(cellList)
     }

@@ -1,0 +1,107 @@
+---
+title: "Showcasing"
+output: html_document
+---
+
+```{r setup}
+knitr::opts_chunk$set(echo = TRUE)
+library(terra)
+library(lattice)
+library(imager)
+library(parallel)
+```
+
+# Function Explanation
+
+`swf.clumper.regular` simulates iteratively changes in SWF habitat within a spatial matrix. It takes a matrix where `swfCat` category represents habitat and `agriCat` represents non-habitat. Then it applies a clumping algorithm to rearrange habitat cells to form larger, more connected patches. Pixels can only change in the direction agriCat --> swfCat. Other categories do not move.
+
+## The basic logic of the function is:
+- Dissects the matrix in smaller kernels (can be also the whole image)
+- Extract SWF edges with the Canny algotithm (sigma user defined)
+- Finds spatial indexes of AgriCat cells
+- Finds indexes of SWF cells that fall on edges (attractors)
+- Finds indexes of SWF cells that do not fall on edges (movable cells)
+- Picks edge SWF from a low, medium or high SWF density area (user defined) which is then used as an "attractor"
+- Picks Q (number is user defined) agri cell that are the closest neighbours to the attractor favouring diagonal neighbour to avoid straight lines
+- Picks the Q (number is user defined) non-edge SWF farthest from the attractor which are the SWF that move.
+- Saves the rearrenged matrix which is used for the next iteration
+
+## Function options
+- `Hmatrix` A matrix representing the initial habitat state.
+- `swfCat` Integer representing habitat category in the matrix.
+- `agriCat` Integer representing non-habitat category in the matrix.
+- `foreCat` Integer representing fores (habitat) category in the matrix.
+- `Q` Integer representing the number of cells to be moved in each kernel per iteration.
+- `iterations` Number of iterations for the aggregation process.
+- `kernelCl` Vertical size of the kernel for processing.
+- `kernelRw` Horizontal size of the kernel for processing.
+- `NNeighbors` Threshold of neighbours in a kernel below which habitat pixels are moved in a kernel.
+- `maxDistance` Searching radius for habitat pixel aggregation.
+- `Density` Strategy for selecting the cell as a gravity center. "H" to choose area with high habitat cover, "L" from low, "M" for median density.
+- `queensCase` If TRUE, all 8 directions are considered for neighbors; if FALSE, only orthogonal neighbors are considered.
+- `np Number` of cores for parallel processing.
+- `deBug` If TRUE, debugging information is provided.
+
+
+```{r,  message=TRUE, warning=TRUE}
+# source('/home/matteo/own_data/PoD/jrc/swf_molder/swf_molder.r')
+require(SWFmolder)
+```
+
+## Import raster
+```{r,  message=TRUE, warning=TRUE}
+# Load the raster data
+swf.raster <- load_clc_swf()
+swf.mt <- t(terra::as.matrix(swf.raster, wide=T))
+storage.mode(swf.mt) <- "integer"
+```
+
+```{r,  message=FALSE, warning=FALSE}
+d <- terra::classify(swf.raster, c(0,1,2,3,4))
+terra::plot(d, type="classes", plg=list(legend=c("SwF","Agri","Forest","Water/Other"), x="topright", bty="o", bg="white", border = "black"), col=c("light green","yellow","dark green","blue"),main="Landscape (Around Pamplona)")
+```
+
+# ## Run function with 100 px kernel
+# ```{r,  message=FALSE, warning=FALSE}
+# iters <- 1
+# swf.L <- swf.clumper.regular(Hmatrix=swf.mt, swfCat=1, agriCat=2, foreCat=3, sigma=2, Q=5, iterations=iters, kernelCl=100, kernelRw=100, NNeighbors=3, queensCase=TRUE, np=7, maxDistance = 2, Density="L", deBug=FALSE)
+# ```
+
+# ## Plot results
+# ```{r,  message=FALSE, warning=FALSE}
+# diff <- swf.L[[length(swf.L)]] - swf.mt
+# image(diff)
+# ```
+
+# ```{r,  message=FALSE, warning=FALSE, hide=TRUE}
+# layout_matrix <- matrix(c(1, 2, 3), ncol = 1, byrow = TRUE)
+# lattice::trellis.par.set(layout.heights = list(top.padding = 1, main.key.padding = 1.5, key.axis.padding = -1, axis.xlab.padding = -1, bottom.padding = -1))
+# lattice::trellis.par.set(layout.widths = list(left.padding = -1, key.ylab.padding = -1, right.padding = -1))
+# ```
+
+# ```{r, fig.width=8, fig.height=15, fig.align='center'}
+# print(lattice::levelplot(swf.mt, colorkey=FALSE, xlab="", ylab="", main="Original", scales=list(x=list(draw=FALSE), y=list(draw=FALSE))),  split=c(1, 1, 1, 3), more=TRUE) 
+# print(lattice::levelplot(swf.L[[length(swf.L)]], colorkey=FALSE, xlab="", ylab="", main=paste("Rearranged after", iters, "iterations"), scales=list(x=list(draw=FALSE), y=list(draw=FALSE))),  split=c(1, 2, 1, 3), more=TRUE)
+# print(lattice::levelplot(diff, colorkey=FALSE, xlab="", ylab="", main="Difference", scales=list(x=list(draw=FALSE), y=list(draw=FALSE))), 
+#       split=c(1, 3, 1, 3), more=FALSE) 
+# ```
+
+# Run function with kernel equal to image dimension/2 and moving 50 pixels per time
+# ```{r,  message=FALSE, warning=FALSE, include=FALSE}
+# iters=5
+# swf.H <- swf.clumper.regular(Hmatrix=swf.mt, swfCat=1, agriCat=2, Q=50, sigma=1, iterations=iters, kernelCl=ncol(swf.mt)/2, kernelRw=nrow(swf.mt)/2, NNeighbors=3, queensCase=TRUE, np=7, maxDistance = 2, Density="M", deBug=FALSE)
+# diff <- swf.H[[length(swf.H)]] - swf.mt
+# ```
+
+# ```{r,  message=FALSE, warning=FALSE, hide=TRUE, include=FALSE}
+# layout_matrix <- matrix(c(1, 2, 3), ncol = 1, byrow = TRUE)
+# lattice::trellis.par.set(layout.heights = list(top.padding = 1, main.key.padding = 1.5, key.axis.padding = -1, axis.xlab.padding = -1, bottom.padding = -1))
+# lattice::trellis.par.set(layout.widths = list(left.padding = -1, key.ylab.padding = -1, right.padding = -1))
+# ```
+
+# ```{r, fig.width=8, fig.height=15, fig.align='center', include=FALSE}
+# print(lattice::levelplot(swf.mt, colorkey=FALSE, xlab="", ylab="", main="Original", scales=list(x=list(draw=FALSE), y=list(draw=FALSE))),  split=c(1, 1, 1, 3), more=TRUE) 
+# print(lattice::levelplot(swf.H[[length(swf.H)]], colorkey=FALSE, xlab="", ylab="", main=paste("Rearranged after", iters, "iterations"), scales=list(x=list(draw=FALSE), y=list(draw=FALSE))),  split=c(1, 2, 1, 3), more=TRUE)
+# print(lattice::levelplot(diff, colorkey=FALSE, xlab="", ylab="", main="Difference", scales=list(x=list(draw=FALSE), y=list(draw=FALSE))), 
+#       split=c(1, 3, 1, 3), more=FALSE) 
+# ```
