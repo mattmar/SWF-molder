@@ -55,6 +55,9 @@
     <li>
       <a href="../articles/synthetic_test.html">SWF molder V2.0 toy examples</a>
     </li>
+    <li>
+      <a href="../articles/tests_randomised.html">SWF molder V2.0 random matrices</a>
+    </li>
   </ul>
 </li>
       </ul>
@@ -81,9 +84,9 @@
       <h1 data-toc-skip>SWF molder V2.0 toy examples</h1>
                         <h4 data-toc-skip class="author">Marcantonio Matteo</h4>
             
-            <h4 data-toc-skip class="date">January 15, 2024</h4>
+            <h4 data-toc-skip class="date">January 19, 2024</h4>
       
-      <small class="dont-index">Source: <a href="https://github.com/mattmar/SWF-molder/blob/HEAD/vignettes/synthetic_test.Rmd" class="external-link"><code>vignettes/synthetic_test.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/mattmar/SWF-molder/blob/HEAD/R/vignettes/synthetic_test.Rmd" class="external-link"><code>R/vignettes/synthetic_test.Rmd</code></a></small>
       <div class="hidden name"><code>synthetic_test.Rmd</code></div>
 
     </div>
@@ -134,11 +137,11 @@
 <code class="sourceCode R"><span><span class="va">iters</span> <span class="op">=</span> <span class="fl">10</span></span>
 <span><span class="va">test.1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/swf.molder.html">swf.molder</a></span><span class="op">(</span></span>
 <span>Hmatrix <span class="op">=</span> <span class="va">toy.mt</span>, </span>
-<span>swfCover<span class="op">=</span><span class="fl">0.90</span>, </span>
+<span>swfCover<span class="op">=</span><span class="fl">0.9</span>, </span>
 <span>swfCat<span class="op">=</span><span class="fl">1</span>, </span>
 <span>agriCat<span class="op">=</span><span class="fl">2</span>,</span>
 <span>Q<span class="op">=</span><span class="fl">1</span>, <span class="co"># number of neighbour allocated per iterations</span></span>
-<span>fDiagonal<span class="op">=</span><span class="cn">FALSE</span>, </span>
+<span>ExpDirection<span class="op">=</span><span class="st">"orthogonal"</span>, </span>
 <span>iterations <span class="op">=</span> <span class="va">iters</span>, </span>
 <span>kernelCl<span class="op">=</span><span class="fu"><a href="https://rdrr.io/pkg/terra/man/dimensions.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">toy.mt</span><span class="op">)</span>, kernelRw<span class="op">=</span><span class="fu"><a href="https://rdrr.io/pkg/terra/man/dimensions.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">toy.mt</span><span class="op">)</span>, </span>
 <span>NNeighbors<span class="op">=</span><span class="fl">1</span>, <span class="co"># number of px that a SWF pixel must have to be selected</span></span>
@@ -162,7 +165,7 @@
 <span>swfCover<span class="op">=</span><span class="fl">0.90</span>, </span>
 <span>swfCat<span class="op">=</span><span class="fl">1</span>, </span>
 <span>agriCat<span class="op">=</span><span class="fl">2</span>,</span>
-<span>fDiagonal<span class="op">=</span><span class="cn">TRUE</span>, <span class="co"># sets preferred direction of expantion </span></span>
+<span>ExpDirection<span class="op">=</span><span class="st">"mixed"</span>, <span class="co"># sets preferred direction of expantion </span></span>
 <span>Q<span class="op">=</span><span class="fl">1</span>, <span class="co"># number of neighbour allocated per iterations</span></span>
 <span>iterations <span class="op">=</span> <span class="va">iters</span>, </span>
 <span>kernelCl<span class="op">=</span><span class="fu"><a href="https://rdrr.io/pkg/terra/man/dimensions.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">toy.mt</span><span class="op">)</span>, kernelRw<span class="op">=</span><span class="fu"><a href="https://rdrr.io/pkg/terra/man/dimensions.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">toy.mt</span><span class="op">)</span>, </span>
@@ -183,7 +186,8 @@
 <span>swfCover<span class="op">=</span><span class="fl">0.90</span>, </span>
 <span>swfCat<span class="op">=</span><span class="fl">1</span>, </span>
 <span>agriCat<span class="op">=</span><span class="fl">2</span>,</span>
-<span>fDiagonal<span class="op">=</span><span class="cn">FALSE</span>, <span class="co"># sets preferred direction of expantion </span></span>
+<span>ExpPriority<span class="op">=</span><span class="st">"vertical"</span>,</span>
+<span>ExpDirection<span class="op">=</span><span class="st">"orthogonal"</span>, <span class="co"># sets preferred direction of expantion </span></span>
 <span>Q<span class="op">=</span><span class="fl">1</span>, <span class="co"># number of neighbour allocated per iterations</span></span>
 <span>iterations <span class="op">=</span> <span class="va">iters</span>, </span>
 <span>kernelCl<span class="op">=</span><span class="fu"><a href="https://rdrr.io/pkg/terra/man/dimensions.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">toy.mt</span><span class="op">)</span>, kernelRw<span class="op">=</span><span class="fu"><a href="https://rdrr.io/pkg/terra/man/dimensions.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">toy.mt</span><span class="op">)</span>, </span>
@@ -208,7 +212,7 @@
 <span>swfCover<span class="op">=</span><span class="fl">0.90</span>, </span>
 <span>swfCat<span class="op">=</span><span class="fl">1</span>, </span>
 <span>agriCat<span class="op">=</span><span class="fl">2</span>,</span>
-<span>fDiagonal<span class="op">=</span><span class="cn">FALSE</span>, <span class="co"># sets preferred direction of expantion </span></span>
+<span>ExpDirection<span class="op">=</span><span class="st">"orthogonal"</span>, <span class="co"># sets preferred direction of expantion </span></span>
 <span>Q<span class="op">=</span><span class="fl">2</span>, <span class="co"># number of neighbour allocated per iterations</span></span>
 <span>iterations <span class="op">=</span> <span class="va">iters</span>, </span>
 <span>kernelCl<span class="op">=</span><span class="fu"><a href="https://rdrr.io/pkg/terra/man/dimensions.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">toy.mt</span><span class="op">)</span>, kernelRw<span class="op">=</span><span class="fu"><a href="https://rdrr.io/pkg/terra/man/dimensions.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">toy.mt</span><span class="op">)</span>, </span>
@@ -233,7 +237,7 @@
 <span>swfCover<span class="op">=</span><span class="fl">0.90</span>, </span>
 <span>swfCat<span class="op">=</span><span class="fl">1</span>, </span>
 <span>agriCat<span class="op">=</span><span class="fl">2</span>,</span>
-<span>fDiagonal<span class="op">=</span><span class="cn">TRUE</span>, <span class="co"># sets preferred direction of expantion </span></span>
+<span>ExpDirection<span class="op">=</span><span class="st">"orthogonal"</span>, <span class="co"># sets preferred direction of expantion </span></span>
 <span>Q<span class="op">=</span><span class="fl">2</span>, <span class="co"># number of neighbour allocated per iterations</span></span>
 <span>iterations <span class="op">=</span> <span class="va">iters</span>, </span>
 <span>kernelCl<span class="op">=</span><span class="fu"><a href="https://rdrr.io/pkg/terra/man/dimensions.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">toy.mt</span><span class="op">)</span>, kernelRw<span class="op">=</span><span class="fu"><a href="https://rdrr.io/pkg/terra/man/dimensions.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">toy.mt</span><span class="op">)</span>, </span>
@@ -258,7 +262,7 @@
 <span>swfCover<span class="op">=</span><span class="fl">0.90</span>, </span>
 <span>swfCat<span class="op">=</span><span class="fl">1</span>, </span>
 <span>agriCat<span class="op">=</span><span class="fl">2</span>,</span>
-<span>fDiagonal<span class="op">=</span><span class="cn">FALSE</span>, <span class="co"># sets preferred direction of expantion </span></span>
+<span>ExpDirection<span class="op">=</span><span class="st">"orthogonal"</span>, <span class="co"># sets preferred direction of expansion </span></span>
 <span>Q<span class="op">=</span><span class="fl">7</span>, <span class="co"># number of neighbour allocated per iterations</span></span>
 <span>iterations <span class="op">=</span> <span class="va">iters</span>, </span>
 <span>kernelCl<span class="op">=</span><span class="fu"><a href="https://rdrr.io/pkg/terra/man/dimensions.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">toy.mt</span><span class="op">)</span>, kernelRw<span class="op">=</span><span class="fu"><a href="https://rdrr.io/pkg/terra/man/dimensions.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">toy.mt</span><span class="op">)</span>, </span>
@@ -297,7 +301,7 @@
 <span>swfCover<span class="op">=</span><span class="fl">0.90</span>, </span>
 <span>swfCat<span class="op">=</span><span class="fl">1</span>, </span>
 <span>agriCat<span class="op">=</span><span class="fl">2</span>,</span>
-<span>fDiagonal<span class="op">=</span><span class="cn">FALSE</span>, <span class="co"># sets preferred direction of expantion </span></span>
+<span>ExpDirection<span class="op">=</span><span class="st">"diagonal"</span>, <span class="co"># sets preferred direction of expantion </span></span>
 <span>Q<span class="op">=</span><span class="fl">24</span>, <span class="co"># number of neighbour allocated per iterations</span></span>
 <span>iterations <span class="op">=</span> <span class="va">iters</span>, </span>
 <span>kernelCl<span class="op">=</span><span class="fu"><a href="https://rdrr.io/pkg/terra/man/dimensions.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">toy.mt</span><span class="op">)</span>, kernelRw<span class="op">=</span><span class="fu"><a href="https://rdrr.io/pkg/terra/man/dimensions.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">toy.mt</span><span class="op">)</span>, </span>

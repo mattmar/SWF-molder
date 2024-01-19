@@ -4,6 +4,9 @@
     <loc>/404.html</loc>
   </url>
   <url>
+    <loc>/articles/comparison.html</loc>
+  </url>
+  <url>
     <loc>/articles/index.html</loc>
   </url>
   <url>
@@ -13,13 +16,25 @@
     <loc>/articles/synthetic_test.html</loc>
   </url>
   <url>
+    <loc>/articles/tests_randomised.html</loc>
+  </url>
+  <url>
     <loc>/authors.html</loc>
   </url>
   <url>
     <loc>/index.html</loc>
   </url>
   <url>
+    <loc>/reference/GfM.html</loc>
+  </url>
+  <url>
+    <loc>/reference/MfG.html</loc>
+  </url>
+  <url>
     <loc>/reference/areThereLonelyOLD.html</loc>
+  </url>
+  <url>
+    <loc>/reference/check_neighbors.html</loc>
   </url>
   <url>
     <loc>/reference/countNeighborsOLD.html</loc>
@@ -47,5 +62,8 @@
   </url>
   <url>
     <loc>/reference/swf_clc.html</loc>
+  </url>
+  <url>
+    <loc>/reference/swf_molderN.html</loc>
   </url>
 </urlset>

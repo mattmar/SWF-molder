@@ -55,11 +55,11 @@ text(rast(t(toy.mt)), digits=1)
 iters = 10
 test.1 <- swf.molder(
 Hmatrix = toy.mt, 
-swfCover=0.90, 
+swfCover=0.9, 
 swfCat=1, 
 agriCat=2,
 Q=1, # number of neighbour allocated per iterations
-fDiagonal=FALSE, 
+ExpDirection="orthogonal", 
 iterations = iters, 
 kernelCl=ncol(toy.mt), kernelRw=nrow(toy.mt), 
 NNeighbors=1, # number of px that a SWF pixel must have to be selected
@@ -93,7 +93,7 @@ Hmatrix = toy.mt,
 swfCover=0.90, 
 swfCat=1, 
 agriCat=2,
-fDiagonal=TRUE, # sets preferred direction of expantion 
+ExpDirection="mixed", # sets preferred direction of expantion 
 Q=1, # number of neighbour allocated per iterations
 iterations = iters, 
 kernelCl=ncol(toy.mt), kernelRw=nrow(toy.mt), 
@@ -128,7 +128,8 @@ Hmatrix = toy.mt,
 swfCover=0.90, 
 swfCat=1, 
 agriCat=2,
-fDiagonal=FALSE, # sets preferred direction of expantion 
+ExpPriority="vertical",
+ExpDirection="orthogonal", # sets preferred direction of expantion 
 Q=1, # number of neighbour allocated per iterations
 iterations = iters, 
 kernelCl=ncol(toy.mt), kernelRw=nrow(toy.mt), 
@@ -163,7 +164,7 @@ Hmatrix = toy.mt,
 swfCover=0.90, 
 swfCat=1, 
 agriCat=2,
-fDiagonal=FALSE, # sets preferred direction of expantion 
+ExpDirection="orthogonal", # sets preferred direction of expantion 
 Q=2, # number of neighbour allocated per iterations
 iterations = iters, 
 kernelCl=ncol(toy.mt), kernelRw=nrow(toy.mt), 
@@ -198,7 +199,7 @@ Hmatrix = toy.mt,
 swfCover=0.90, 
 swfCat=1, 
 agriCat=2,
-fDiagonal=TRUE, # sets preferred direction of expantion 
+ExpDirection="orthogonal", # sets preferred direction of expantion 
 Q=2, # number of neighbour allocated per iterations
 iterations = iters, 
 kernelCl=ncol(toy.mt), kernelRw=nrow(toy.mt), 
@@ -234,7 +235,7 @@ Hmatrix = toy.mt,
 swfCover=0.90, 
 swfCat=1, 
 agriCat=2,
-fDiagonal=FALSE, # sets preferred direction of expantion 
+ExpDirection="orthogonal", # sets preferred direction of expansion 
 Q=7, # number of neighbour allocated per iterations
 iterations = iters, 
 kernelCl=ncol(toy.mt), kernelRw=nrow(toy.mt), 
@@ -285,7 +286,7 @@ Hmatrix = toy.mt,
 swfCover=0.90, 
 swfCat=1, 
 agriCat=2,
-fDiagonal=FALSE, # sets preferred direction of expantion 
+ExpDirection="diagonal", # sets preferred direction of expantion 
 Q=24, # number of neighbour allocated per iterations
 iterations = iters, 
 kernelCl=ncol(toy.mt), kernelRw=nrow(toy.mt), 

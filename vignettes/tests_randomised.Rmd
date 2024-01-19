@@ -1,0 +1,305 @@
+---
+title: "SWF molder V2.0 random matrices"
+author: "Marcantonio Matteo"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output: 
+  html_document:
+    toc: true # table of content true
+    toc_depth: 2  # upto three depths of headings (specified by #, ## and ###)
+    number_sections: true  ## if you want number sections at each table header
+    theme: united  # many options for theme, this one is my favorite.
+    highlight: tango  # specifies the syntax highlighting style
+    fig_width: 21 
+    fig_height: 29
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r,  message=FALSE, warning=FALSE}
+setwd("~/GitHub/SWF-molder/R")
+library(terra)
+library(devtools)
+load_all()
+# require(SWFmolder)
+extractRandWindow <- function(x, p){
+  firstIndex = sample(seq(length(x) - p + 1), 1)
+  x[firstIndex:(firstIndex + p -1)]
+}
+```
+
+# Random matrix
+```{r fig1, fig.height = 5, fig.width = 5, fig.align = "center",  message=FALSE, warning=FALSE}
+dims <- 100
+null.mt <- matrix(2, ncol=dims,nrow=dims)
+set.seed(123)
+null.mt[sample((1:dims^2),200)] <-1
+null.mt[as.vector(replicate(3,extractRandWindow(1:dims^2,100)))] <-3
+color_map <- c('#ef8a62', '#f7f7f7', '#67a9cf')
+plot(rast(t(null.mt)),col=color_map,cex=10)
+iters = 20
+```
+
+# Ortogonal expansion, high edgeness (5 NN), slow growth (1 px)
+```{r,  message=FALSE, warning=FALSE, results="hide"}
+test.ort <- swf.molder(
+Hmatrix = null.mt, 
+swfCover=0.30, 
+swfCat=1,
+reduceTo=1, 
+agriCat=2,
+ExpDirection="orthogonal", # sets preferred direction of expansion
+ExpPriority="mixed", 
+Q=1, # number of neighbour allocated per iterations
+iterations = iters, 
+kernelCl=ncol(null.mt), kernelRw=nrow(null.mt), 
+NNeighbors=5, # number of px that a SWF pixel must have to be selected
+maxDistance = 1, 
+queensCase=TRUE, 
+np=parallel::detectCores(),
+deBug=TRUE)
+```
+
+```{r,  message=FALSE, warning=FALSE}
+test.ort <- c(list(null.mt), test.ort)
+ncol=3
+par(mfrow = c(ceiling(length(test.ort)/ncol),ncol) , mai = c(0.1, 0.1, 0.1, 0.1))
+for (i in 1:length(test.ort)) {
+	testTemp <- rast(t(test.ort[[i]]))
+	plot(testTemp, col = color_map, legend=FALSE, axes = FALSE, box = FALSE, main = paste("Iter: ", i-1,"; SWF % Cover: ",round(
+		(ncell(testTemp[testTemp==1])/ncell(testTemp[testTemp%in%c(1,2)]))*100,1)))
+	# text(testTemp, digits=1)
+}	
+```
+
+# Diagonal expansion, high edgeness (5 NN), slow growth (1 px)
+```{r,  message=FALSE, warning=FALSE, results="hide"}
+test.dia <- swf.molder(
+Hmatrix = null.mt, 
+swfCover=0.30, 
+swfCat=1,
+reduceTo=1, 
+agriCat=2,
+ExpDirection="diagonal", # sets preferred direction of expansion
+ExpPriority="mixed", 
+Q=1, # number of neighbour allocated per iterations
+iterations = iters, 
+kernelCl=ncol(null.mt), kernelRw=nrow(null.mt), 
+NNeighbors=5, # number of px that a SWF pixel must have to be selected
+maxDistance = 1, 
+queensCase=TRUE, 
+np=parallel::detectCores(),
+deBug=TRUE)
+```
+
+```{r,  message=FALSE, warning=FALSE}
+test.dia <- c(list(null.mt), test.dia)
+ncol=3
+par(mfrow = c(ceiling(length(test.dia)/ncol),ncol) , mai = c(0.1, 0.1, 0.1, 0.1))
+for (i in 1:length(test.dia)) {
+	testTemp <- rast(t(test.dia[[i]]))
+	plot(testTemp, col = color_map, legend=FALSE, axes = FALSE, box = FALSE, main = paste("Iter: ", i-1,"; SWF % Cover: ",round(
+		(ncell(testTemp[testTemp==1])/ncell(testTemp[testTemp%in%c(1,2)]))*100,1)))
+	# text(testTemp, digits=1)
+}	
+```
+
+# Ortogonal expansion, high edgeness (5 NN), fast growth (10 px)
+```{r,  message=FALSE, warning=FALSE, results="hide"}
+test.ortFast <- swf.molder(
+Hmatrix = null.mt, 
+swfCover=0.30, 
+swfCat=1,
+reduceTo=1, 
+agriCat=2,
+ExpDirection="orthogonal", # sets preferred direction of expansion
+ExpPriority="mixed", 
+Q=10, # number of neighbour allocated per iterations
+iterations = iters, 
+kernelCl=ncol(null.mt), kernelRw=nrow(null.mt), 
+NNeighbors=5, # number of px that a SWF pixel must have to be selected
+maxDistance = 1, 
+queensCase=TRUE, 
+np=parallel::detectCores(),
+deBug=TRUE)
+```
+
+```{r,  message=FALSE, warning=FALSE}
+test.ortFast <- c(list(null.mt), test.ortFast)
+ncol=2
+par(mfrow = c(ceiling(length(test.ortFast)/ncol),ncol) , mai = c(0.1, 0.1, 0.1, 0.1))
+for (i in 1:length(test.ortFast)) {
+	testTemp <- rast(t(test.ortFast[[i]]))
+	plot(testTemp, col = color_map, legend=FALSE, axes = FALSE, box = FALSE, main = paste("Iter: ", i-1,"; SWF % Cover: ",round(
+		(ncell(testTemp[testTemp==1])/ncell(testTemp[testTemp%in%c(1,2)]))*100,1)))
+	# text(testTemp, digits=1)
+}	
+```
+
+# Diagonal expansion, high edgeness (5 NN), fast growth (10 px)
+```{r,  message=FALSE, warning=FALSE, results="hide"}
+test.diaFast <- swf.molder(
+Hmatrix = null.mt, 
+swfCover=0.30, 
+swfCat=1,
+reduceTo=1, 
+agriCat=2,
+ExpDirection="diagonal", # sets preferred direction of expansion
+ExpPriority="mixed", 
+Q=10, # number of neighbour allocated per iterations
+iterations = iters, 
+kernelCl=ncol(null.mt), kernelRw=nrow(null.mt), 
+NNeighbors=5, # number of px that a SWF pixel must have to be selected
+maxDistance = 1, 
+queensCase=TRUE, 
+np=parallel::detectCores(),
+deBug=TRUE)
+```
+
+```{r,  message=FALSE, warning=FALSE}
+test.diaFast <- c(list(null.mt), test.diaFast)
+ncol=2
+par(mfrow = c(ceiling(length(test.diaFast)/ncol),ncol) , mai = c(0.1, 0.1, 0.1, 0.1))
+for (i in 1:length(test.diaFast)) {
+	testTemp <- rast(t(test.diaFast[[i]]))
+	plot(testTemp, col = color_map, legend=FALSE, axes = FALSE, box = FALSE, main = paste("Iter: ", i-1,"; SWF % Cover: ",round(
+		(ncell(testTemp[testTemp==1])/ncell(testTemp[testTemp%in%c(1,2)]))*100,1)))
+	# text(testTemp, digits=1)
+}	
+```
+
+# Ortogonal expansion, low edgeness (1 NN), slow growth (1 px)
+```{r,  message=FALSE, warning=FALSE, results="hide"}
+test.ortLowE <- swf.molder(
+Hmatrix = null.mt, 
+swfCover=0.30, 
+swfCat=1,
+reduceTo=1, 
+agriCat=2,
+ExpDirection="orthogonal", # sets preferred direction of expansion
+ExpPriority="mixed", 
+Q=1, # number of neighbour allocated per iterations
+iterations = iters, 
+kernelCl=ncol(null.mt), kernelRw=nrow(null.mt), 
+NNeighbors=1, # number of px that a SWF pixel must have to be selected
+maxDistance = 1, 
+queensCase=TRUE, 
+np=parallel::detectCores(),
+deBug=TRUE)
+```
+
+```{r,  message=FALSE, warning=FALSE}
+test.ortLowE <- c(list(null.mt), test.ortLowE)
+ncol=3
+par(mfrow = c(ceiling(length(test.ortLowE)/ncol),ncol) , mai = c(0.1, 0.1, 0.1, 0.1))
+for (i in 1:length(test.ortLowE)) {
+	testTemp <- rast(t(test.ortLowE[[i]]))
+	plot(testTemp, col = color_map, legend=FALSE, axes = FALSE, box = FALSE, main = paste("Iter: ", i-1,"; SWF % Cover: ",round(
+		(ncell(testTemp[testTemp==1])/ncell(testTemp[testTemp%in%c(1,2)]))*100,1)))
+	# text(testTemp, digits=1)
+}	
+```
+
+
+# Diagonal expansion, low edgeness (1 NN), slow growth (1 px)
+```{r,  message=FALSE, warning=FALSE, results="hide"}
+test.diaLowE <- swf.molder(
+Hmatrix = null.mt, 
+swfCover=0.30, 
+swfCat=1,
+reduceTo=1, 
+agriCat=2,
+ExpDirection="orthogonal", # sets preferred direction of expansion
+ExpPriority="mixed", 
+Q=1, # number of neighbour allocated per iterations
+iterations = iters, 
+kernelCl=ncol(null.mt), kernelRw=nrow(null.mt), 
+NNeighbors=1, # number of px that a SWF pixel must have to be selected
+maxDistance = 1, 
+queensCase=TRUE, 
+np=parallel::detectCores(),
+deBug=TRUE)
+```
+
+```{r,  message=FALSE, warning=FALSE}
+test.diaLowE <- c(list(null.mt), test.diaLowE)
+ncol=3
+par(mfrow = c(ceiling(length(test.diaLowE)/ncol),ncol) , mai = c(0.1, 0.1, 0.1, 0.1))
+for (i in 1:length(test.diaLowE)) {
+	testTemp <- rast(t(test.diaLowE[[i]]))
+	plot(testTemp, col = color_map, legend=FALSE, axes = FALSE, box = FALSE, main = paste("Iter: ", i-1,"; SWF % Cover: ",round(
+		(ncell(testTemp[testTemp==1])/ncell(testTemp[testTemp%in%c(1,2)]))*100,1)))
+	# text(testTemp, digits=1)
+}	
+```
+
+# Buffer expansion
+```{r,  message=FALSE, warning=FALSE, results="hide"}
+test.buffer <- swf.molder(
+Hmatrix = null.mt, 
+swfCover=0.30, 
+swfCat=1,
+reduceTo=1, 
+agriCat=2,
+ExpDirection="orthogonal", # sets preferred direction of expansion
+ExpPriority="vertical",
+maxGDistance=1, 
+Q=8, # number of neighbour allocated per iterations
+iterations = iters, 
+kernelCl=ncol(null.mt), kernelRw=nrow(null.mt), 
+NNeighbors=1, # number of px that a SWF pixel must have to be selected
+maxDistance = 1, 
+queensCase=TRUE, 
+np=parallel::detectCores(),
+deBug=TRUE)
+```
+
+
+```{r,  message=FALSE, warning=FALSE}
+test.buffer <- c(list(null.mt), test.buffer)
+ncol=2
+par(mfrow = c(ceiling(length(test.buffer)/ncol),ncol) , mai = c(0.1, 0.1, 0.1, 0.1))
+for (i in 1:length(test.buffer)) {
+	testTemp <- rast(t(test.buffer[[i]]))
+	writeRaster(testTemp, paste0("~/testTemp_",i,".tif"),overwrite=TRUE)
+	plot(testTemp, col = color_map, legend=FALSE, axes = FALSE, box = FALSE, main = paste("Iter: ", i-1,"; SWF % Cover: ",round(
+		(ncell(testTemp[testTemp==1])/ncell(testTemp[testTemp%in%c(1,2)]))*100,1)))
+	# text(testTemp, digits=1)
+}	
+```
+
+
+# Buffer expansion on reduced target pixels
+```{r,  message=FALSE, warning=FALSE, results="hide"}
+test.buffer <- swf.molder(
+Hmatrix = null.mt, 
+swfCover=0.30, 
+swfCat=1,
+reduceTo=0.05, 
+agriCat=2,
+ExpDirection="orthogonal", # sets preferred direction of expansion
+ExpPriority="vertical",
+maxGDistance=1,  
+Q=8, # number of neighbour allocated per iterations
+iterations = iters, 
+kernelCl=ncol(null.mt), kernelRw=nrow(null.mt), 
+NNeighbors=1, # number of px that a SWF pixel must have to be selected
+maxDistance = 1, 
+queensCase=TRUE, 
+np=parallel::detectCores(),
+deBug=TRUE)
+```
+
+```{r,  message=FALSE, warning=FALSE}
+test.buffer <- c(list(null.mt), test.buffer)
+ncol=4
+par(mfrow = c(ceiling(length(test.buffer)/ncol),ncol) , mai = c(0.1, 0.1, 0.1, 0.1))
+for (i in 1:length(test.buffer)) {
+	testTemp <- rast(t(test.buffer[[i]]))
+	# writeRaster(testTemp, paste0("~/testTemp_",i,".tif"),overwrite=TRUE)
+	plot(testTemp, col = color_map, legend=FALSE, axes = FALSE, box = FALSE, main = paste("Iter: ", i-1,"; SWF % Cover: ",round(
+		(ncell(testTemp[testTemp==1])/ncell(testTemp[testTemp%in%c(1,2)]))*100,1)))
+	# text(testTemp, digits=1)
+}	
+```

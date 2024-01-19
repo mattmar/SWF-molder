@@ -13,6 +13,8 @@ Description: A methodology to simulate SWF changes.
 Depends: R (>= 4.0.0)
 Imports:
     terra,
+    igraph,
+    parallel
 Suggests: 
     knitr,
     imager,

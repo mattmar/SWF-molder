@@ -39,6 +39,9 @@ and optionally reducing the selection by a given factor."><!-- mathjax --><scrip
     <li>
       <a href="../articles/synthetic_test.html">SWF molder V2.0 toy examples</a>
     </li>
+    <li>
+      <a href="../articles/tests_randomised.html">SWF molder V2.0 random matrices</a>
+    </li>
   </ul></li>
       </ul><ul class="nav navbar-nav navbar-right"><li>
   <a href="https://github.com/mattmar/SWF-molder/" class="external-link">
@@ -73,7 +76,8 @@ and optionally reducing the selection by a given factor.</p>
 <span>  <span class="va">swfCat</span>,</span>
 <span>  <span class="va">agriCat</span>,</span>
 <span>  <span class="va">Q</span>,</span>
-<span>  <span class="va">fDiagonal</span>,</span>
+<span>  ExpPriority <span class="op">=</span> <span class="st">"mixed"</span>,</span>
+<span>  ExpDirection <span class="op">=</span> <span class="st">"orthogonal"</span>,</span>
 <span>  reduceTo <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  iterations <span class="op">=</span> <span class="fl">20</span>,</span>
 <span>  kernelCl <span class="op">=</span> <span class="fl">20</span>,</span>
@@ -81,6 +85,7 @@ and optionally reducing the selection by a given factor.</p>
 <span>  NNeighbors <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  maxDistance <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  queensCase <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  maxGDistance <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  np <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  deBug <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -106,10 +111,6 @@ and optionally reducing the selection by a given factor.</p>
 
 <dt>Q</dt>
 <dd><p>The number of cells to be potentially modified in each iteration.</p></dd>
-
-
-<dt>fDiagonal</dt>
-<dd><p>Function to determine the prioritization of diagonal neighbors.</p></dd>
 
 
 <dt>reduceTo</dt>
@@ -147,6 +148,10 @@ and optionally reducing the selection by a given factor.</p>
 <dt>deBug</dt>
 <dd><p>Logical; if TRUE, prints debugging information during processing.</p></dd>
 
+
+<dt>ExpDir</dt>
+<dd><p>Function to determine the prioritization of diagonal neighbors.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
@@ -155,16 +160,6 @@ and optionally reducing the selection by a given factor.</p>
 <p>A list of matrices representing the state of the habitat matrix after each iteration.</p>
     </div>
 
-    <div id="ref-examples">
-    <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">initial_matrix</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span>,<span class="fl">1</span>,<span class="fl">3</span>,<span class="fl">1</span>,<span class="fl">2</span>,<span class="fl">2</span>,<span class="fl">3</span><span class="op">)</span>, ncol<span class="op">=</span><span class="fl">2</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">swf.molder</span><span class="op">(</span>Hmatrix <span class="op">=</span> <span class="va">initial_matrix</span>, swfCover<span class="op">=</span><span class="fl">0.75</span>, swfCat<span class="op">=</span><span class="fl">2</span>, </span></span>
-<span class="r-in"><span>                     agriCat<span class="op">=</span><span class="fl">1</span>, Q<span class="op">=</span><span class="fl">1</span>, fDiagonal<span class="op">=</span><span class="cn">TRUE</span>, reduceTo<span class="op">=</span><span class="fl">0</span>, iterations<span class="op">=</span><span class="fl">20</span>, </span></span>
-<span class="r-in"><span>                     kernelCl<span class="op">=</span><span class="fl">2</span>, kernelRw<span class="op">=</span><span class="fl">2</span>, NNeighbors<span class="op">=</span><span class="fl">0</span>, maxDistance<span class="op">=</span><span class="fl">1</span>, </span></span>
-<span class="r-in"><span>                     queensCase<span class="op">=</span><span class="cn">FALSE</span>, np<span class="op">=</span><span class="fl">1</span>, deBug<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Iteration:  1 ; SWF cover: 1</span>
-</code></pre></div>
-    </div>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top"><h2 data-toc-skip>Contents</h2>

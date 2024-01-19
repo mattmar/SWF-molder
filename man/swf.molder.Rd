@@ -10,7 +10,8 @@ swf.molder(
   swfCat,
   agriCat,
   Q,
-  fDiagonal,
+  ExpPriority = "mixed",
+  ExpDirection = "orthogonal",
   reduceTo = 0,
   iterations = 20,
   kernelCl = 20,
@@ -18,6 +19,7 @@ swf.molder(
   NNeighbors = 0,
   maxDistance = 1,
   queensCase = FALSE,
+  maxGDistance = NULL,
   np = 1,
   deBug = FALSE
 )
@@ -32,8 +34,6 @@ swf.molder(
 \item{agriCat}{The category value in the matrix considered as non-habitat.}
 
 \item{Q}{The number of cells to be potentially modified in each iteration.}
-
-\item{fDiagonal}{Function to determine the prioritization of diagonal neighbors.}
 
 \item{reduceTo}{A factor by which to reduce the selection of cells during processing.}
 
@@ -52,6 +52,8 @@ swf.molder(
 \item{np}{Number of cores for parallel processing.}
 
 \item{deBug}{Logical; if TRUE, prints debugging information during processing.}
+
+\item{ExpDir}{Function to determine the prioritization of diagonal neighbors.}
 }
 \value{
 A list of matrices representing the state of the habitat matrix after each iteration.
@@ -60,11 +62,4 @@ A list of matrices representing the state of the habitat matrix after each itera
 This function modifies a habitat matrix to increase the cover of a specified category
 (swfCat) by clumping it within a defined kernel size, considering neighbor preferences
 and optionally reducing the selection by a given factor.
-}
-\examples{
-initial_matrix <- matrix(c(1,2,1,3,1,2,2,3), ncol=2)
-result <- swf.molder(Hmatrix = initial_matrix, swfCover=0.75, swfCat=2, 
-                     agriCat=1, Q=1, fDiagonal=TRUE, reduceTo=0, iterations=20, 
-                     kernelCl=2, kernelRw=2, NNeighbors=0, maxDistance=1, 
-                     queensCase=FALSE, np=1, deBug=FALSE)
 }
