@@ -5,12 +5,11 @@ orderCellsByDistance <- function(cellList, targetRow, targetCol, ExpPriority, Ex
 
     # Calculate Manhattan distance for each cell from the target
     cellList$manhattanDist <- abs(cellList$row - targetRow) + abs(cellList$col - targetCol)
-    # Adjust Manhattan distance for even values
-    even_indices <- cellList$manhattanDist %% 2 == 0
-    cellList$manhattanDist[even_indices] <- cellList$manhattanDist[even_indices] - 1
-
-    # Identify diagonal cells
+    
+    # Identify diagonal, vertical, and horizontal cells
     cellList$isDiagonal <- abs(cellList$row - targetRow) == abs(cellList$col - targetCol)
+    cellList$isVertical <- cellList$row != targetRow & cellList$col == targetCol
+    cellList$isHorizontal <- cellList$row == targetRow & cellList$col != targetCol
 
     # Assign a random tiebreaker score
     cellList$tiebreaker <- runif(nrow(cellList))
@@ -19,23 +18,27 @@ orderCellsByDistance <- function(cellList, targetRow, targetCol, ExpPriority, Ex
             cellList$tiebreaker[cellList$isDiagonal] <- 0
         } else if (ExpDirection == "diagonal") {
             cellList$tiebreaker[!cellList$isDiagonal] <- 0
-        } else if (ExpDirection == "mixed") {
-            cellList$tiebreaker[!cellList$isDiagonal] <- sample(c(0,1),1)
         }
     } else if (ExpPriority == "vertical") {
-        cellList$tiebreaker <- 0
+        cellList$tiebreaker[!cellList$isVertical] <- 0
+    } else if (ExpPriority == "horizontal") {
+        cellList$tiebreaker[!cellList$isHorizontal] <- 0
     }
 
     # Decide the ordering direction
     if (ExpDirection == "mixed") {
-        ExpDirection <- sample(c("orthogonal", "diagonal"), 1)
+        ExpDirection <- sample(c("orthogonal", "diagonal", "vertical", "horizontal"), 1)
     }
 
-    # Order by Manhattan distance, diagonal, and tiebreaker
+    # Order by Manhattan distance, diagonal/vertical/horizontal, and tiebreaker
     if (ExpDirection == "diagonal") {
         cellList <- cellList[order(cellList$manhattanDist, -cellList$isDiagonal, cellList$tiebreaker), 1:2]
     } else if (ExpDirection == "orthogonal") {
         cellList <- cellList[order(cellList$manhattanDist, cellList$isDiagonal, cellList$tiebreaker), 1:2]
+    } else if (ExpDirection == "vertical") {
+        cellList <- cellList[order(cellList$manhattanDist, -cellList$isVertical, cellList$tiebreaker), 1:2]
+    } else if (ExpDirection == "horizontal") {
+        cellList <- cellList[order(cellList$manhattanDist, -cellList$isHorizontal, cellList$tiebreaker), 1:2]
     }
 
     return(cellList)

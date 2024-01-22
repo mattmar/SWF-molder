@@ -10,7 +10,7 @@
 	#' @param agriCat The category value in the matrix considered as non-habitat.
 	#' @param Q The number of cells to be potentially modified in each iteration.
 	#' @param ExpDir Function to determine the prioritization of diagonal neighbors.
-	#' @param reduceTo A factor by which to reduce the selection of cells during processing.
+	#' @param reduceQTo A factor by which to reduce the selection of cells during processing.
 	#' @param iterations The number of iterations to run the modification process.
 	#' @param kernelCl The number of columns in the kernel (clumping window).
 	#' @param kernelRw The number of rows in the kernel (clumping window).
@@ -22,79 +22,42 @@
 	#'
 	#' @return A list of matrices representing the state of the habitat matrix after each iteration.
 	#' @export
-	swf.molder <- function(Hmatrix, swfCover=0.10, swfCat, agriCat, Q, ExpPriority="mixed", ExpDirection="orthogonal", reduceTo=0, iterations = 20, kernelCl=20, kernelRw=20, NNeighbors=0, maxDistance = 1, queensCase=FALSE, maxGDistance=NULL, np=1, deBug=FALSE) {
+	swf.molder <- function(Hmatrix, swfCover=0.10, swfCat, agriCat, Q, ExpPriority="mixed", ExpDirection="mixed", reduceQTo=0, iterations = 20, kernelCl=20, kernelRw=20, NNeighbors=0, maxDistance = 1, queensCase=FALSE, maxGDistance=1, np=1, deBug=FALSE) {
 
 		matrices.list <- list()
-		ncolumns <- ncol(Hmatrix)
-		nrows <- nrow(Hmatrix)
-		nkernels = (kernelCl*kernelRw) / (kernelCl+kernelRw)
-		counter <- 0
 		iteration = 0
-
 		SWFarea = length(which(Hmatrix%in%swfCat)) / length(which(Hmatrix%in%c(agriCat,swfCat)))
 
 		while(iteration < iterations && SWFarea<swfCover) {
 			iteration=iteration+1
+			
+			agri.cells = as.data.frame(which(Hmatrix == agriCat, arr.ind = TRUE)) # Finds coords with agriCat
+			swf.cells <- as.data.frame(which(Hmatrix == swfCat, arr.ind = TRUE)) # Finds coords with swfCat
 
-			temp.cl <- lapply(seq(1, ncolumns, kernelCl), function(cl) {
-				cl_end = min(cl + kernelCl - 1, ncolumns)
+			if ( (nrow(swf.cells) != 0 ) ) { # Adds swf only if there is at least one swfCat pixel in the kernel
+			# Chose a gravity cell and allocated NN all at once!
 
-				temp.rw <- lapply(seq(1, nrows, kernelRw), function(rw) {
-					rw_end = min(rw + kernelRw - 1, nrows)
+			allocated.cells <- findSwfCells(Hmatrix, swfCat, agriCat, NNeighbors, queensCase, maxDistance, maxGDistance, Q, reduceQTo, ExpPriority, ExpDirection, np)
 
-					this.window = Hmatrix[rw:rw_end, cl:cl_end]
-
-	# Finds coords with agriCat
-	agri.pos = as.data.frame(which(this.window == agriCat, arr.ind = TRUE))
-
-	# Finds coords with swfCat
-	swf.ed <- as.data.frame(which(this.window == swfCat, arr.ind = TRUE))
-
-	# Adds swf only if there is at least one swfCat pixel in the kernel
-	if ( (nrow(swf.ed) != 0 ) ) {
-		if (deBug) cat(paste("Col:",cl, "; Row:",rw,"; SWF pixel: ", nrow(swf.ed),"\n"))
-	# Chose a gravity cell
-	gravity.pos <- findSwfCells(this.window, swfCat, agriCat, NNeighbors, TRUE, maxDistance, np)
-
-	if(nrow(gravity.pos)>0) {
-		if( reduceTo!=0 ) {
-			sampledGravitypos <- sample(1:nrow(gravity.pos),ceiling(nrow(gravity.pos)*reduceTo))
-			if(length(sampledGravitypos)>0) {
-				gravity.pos <- gravity.pos[sampledGravitypos,]
-			}
-		}
-	}
-
-	if (!is.null(gravity.pos) && nrow(gravity.pos) >= 1) {
-
-	# Finds the closest Q number of neighbourns
-	agri.fate <- do.call(rbind.data.frame, ClosestDiagonalAgriCell(this.window, agri.pos, gravity.pos, swfCat, agriCat, ExpPriority, ExpDirection, Q, maxGDistance, np))
-
-	# Adds it to the new position
-	this.window[as.matrix(agri.fate)] <- swfCat
-	} else{
-		counter=counter+1; iteration=iteration+1; return(this.window) 
-	} 
-	} else{
-		counter=counter+1; iteration=iteration+1; return(this.window) 
-	}
-	return(this.window)
-	})
-				do.call(rbind, temp.rw)
-				} )
-
-			outmatrix <- do.call(cbind, temp.cl)
-			if( iteration>1 && identical(outmatrix, matrices.list[[length(matrices.list)]]) ) {
-				break
+			if ( !is.null(allocated.cells) && nrow(allocated.cells) >= 1 ) {
+				Hmatrix[as.matrix(allocated.cells)] <- swfCat
 				} else {
-					matrices.list[[iteration]] <- outmatrix
-					Hmatrix <- outmatrix
-					SWFarea = length(which(Hmatrix%in%c(swfCat))) / length(which(Hmatrix%in%c(agriCat,swfCat)))
-					message(paste("Iteration: ", iteration, "; SWF cover:", round(SWFarea,2)))
+					iteration=iteration+1;
+				} 
+				
+				} else{
+					iteration=iteration+1;
+				}
+
+				if( iteration>1 && identical(Hmatrix, matrices.list[[length(matrices.list)]]) ) {
+					break
+					} else {
+						matrices.list[[iteration]] <- Hmatrix
+						SWFarea = length(which(Hmatrix%in%c(swfCat))) / length(which(Hmatrix%in%c(agriCat,swfCat)))
+						message(paste("Iteration: ", iteration, "; SWF cover:", round(SWFarea,2)))
+					}
 
 				}
 
+				return(matrices.list)
 			}
-
-			return(matrices.list)
-		}

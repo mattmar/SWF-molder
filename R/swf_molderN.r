@@ -11,49 +11,49 @@
 #' @param np Number of cores for parallel processing.
 #' @export
 
-swf_molderN <- function(g, swfCat, agriCat, iterations, Q, NNeighbors = 1, swfCover=0.3, max_radius=1, np=1) {
+swf_molderN <- function(g, swfCat, agriCat, iterations, Q, NNeighbors = 1, swfCover=0.3, maxGDistance=1, max_radius=1, np=1) {
 	iteration=0
 	SWFarea = length(which(V(g)$value == swfCat))/length(which(V(g)$value %in% c(swfCat,agriCat)))
 	graph.list <- list()
 	while( iteration < iterations && SWFarea < swfCover ) {
-# Identify nodes for potential modification
-# pippo<-1
-nNN <- integer(0)
-radius=1
-#Used for in the past, while seems to be more appropriat for growing searches
-while( length(nNN) == 0 && radius <= max_radius ) {
-	AgriV <- which(V(g)$value==swfCat)
-	nNN <- unlist(parallel::mclapply(V(g)[AgriV], check_neighbors, g, agriCat, NNeighbors, radius, mc.cores = np))
-	if(length(nNN) == 0) {
-		radius <- radius + 1
-	}
-}
-if( length(nNN)>0 ) {
-nodes_to_allocate <- unlist(lapply(V(g)[nNN], function(nei) {
-	nei_nodes <- neighbors(g, nei)
-agri_nodes <- nei_nodes[V(g)[nei_nodes]$value == agriCat]
-if (length(agri_nodes) >= Q) {
-	return(sample(agri_nodes, Q))
-	} else {
-		return(agri_nodes)
-	}
-	}))
-}
+		# Find nodes that have the required number of agriCat neighbors
+		neighbors_list <- list()
+		radius <- 1
+		while(radius <= max_radius && length(neighbors_list) == 0 ) {
+			AgriV <- which(V(g)$value == swfCat)
+			potential_neighbors <- parallel::mclapply(V(g)[AgriV], check_neighbors, g, agriCat, NNeighbors, radius, mc.cores = np)
+			neighbors_list <- potential_neighbors[!sapply(potential_neighbors, is.null)]
+			if(length(neighbors_list) == 0) {
+				radius <- radius + 1
+			}
+		}
 
-nodes_to_allocate <- nodes_to_allocate[!V(g)[nodes_to_allocate]$value %in% c(swfCat, 3)]
+		# If there are nodes with the required number of neighbors, proceed to allocate nodes
+		if( length(neighbors_list) > 0 ) {
+			nodes_to_allocate <- unlist(lapply(neighbors_list, function(agri_nodes) {
+				if(length(agri_nodes) >= Q) {
+					return(sample(agri_nodes, Q))
+					} else {
+						return(agri_nodes)
+					}
+					}))
 
-V(g)[nodes_to_allocate]$value <- swfCat
-iteration = iteration+1
-graph.list[[iteration]] <- g
-SWFarea = length(which(V(g)$value == swfCat))/length(which(V(g)$value %in% c(swfCat,agriCat)))
-message(paste("Iteration: ", iteration, "; SWF cover:", round(SWFarea,2)))
-}
-if(length(nNN)>0 && length(graph.list)>2) {
-	if( identical(g, graph.list[[length(graph.list)-1]]) ) {
-		break
+			nodes_to_allocate <- nodes_to_allocate[!is.na(nodes_to_allocate)]
+			V(g)[nodes_to_allocate]$value <- swfCat
+		}
+
+		iteration = iteration+1
+		graph.list[[iteration]] <- g
+		SWFarea = length(which(V(g)$value == swfCat))/length(which(V(g)$value %in% c(swfCat,agriCat)))
+		message(paste("Iteration: ", iteration, "; SWF cover:", round(SWFarea,2)))
+
+		if(length(graph.list)>2) {
+			if( identical(g, graph.list[[length(graph.list)-1]]) ) {
+				break
+			}
+		}
 	}
-}
-return(graph.list)
+	return(graph.list)
 }
 
 #' @title Check Neighbours Function
@@ -67,14 +67,15 @@ return(graph.list)
 #' @export
 check_neighbors <- function(v, graph, agriCat, NNeighbors, radius) {
 	nbrs <- neighborhood(graph, order = radius, nodes = v, mode = "all")[[1]]
-	agri_neighbors <- sum(V(graph)[nbrs]$value == agriCat)
-	if(agri_neighbors >= NNeighbors) {
-		return(v)
-	}
+	agri_neighbors <- V(graph)[nbrs]$value == agriCat
+	if(sum(agri_neighbors) >= NNeighbors) {
+    return(nbrs[agri_neighbors]) # Return the ids of agriCat neighbors
+}
+return(NULL)
 }
 
 #' @title Graph from Matrix Function
-#' @description Attempts to create a graph object from a matrix, with nodes representing cells and edges representing adjacency. I've taken this partially from StackExchange but it seems very unefficient 
+#' @description Attempts to create a graph object from a matrix, with nodes representing cells and edges representing adjacency. I've taken this partially from StackExchange but it seems very inefficient 
 #' @param mat Matrix representing the initial habitat state.
 #' @param np Number of cores for parallel processing.
 #' @return Graph object corresponding to the input matrix.
