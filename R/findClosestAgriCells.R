@@ -40,7 +40,6 @@ findClosestAgriCells <- function(matrix, targetPos, agriCat, Q, maxGDistance, Ex
     }
 
     # Order and select closest neighbors
-    # selectedNeighbors <- selectedNeighbors[complete.cases(selectedNeighbors),]
     orderedNeighbors <- orderCellsByDistance(newNeighbors, r, c, ExpPriority, ExpDirection)
     closestNeighbors <- orderedNeighbors[1:min(nrow(orderedNeighbors), Q), ]
     return(closestNeighbors)

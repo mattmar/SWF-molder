@@ -12,8 +12,6 @@
 	#' @param ExpDir Function to determine the prioritization of diagonal neighbors.
 	#' @param reduceQTo A factor by which to reduce the selection of cells during processing.
 	#' @param iterations The number of iterations to run the modification process.
-	#' @param kernelCl The number of columns in the kernel (clumping window).
-	#' @param kernelRw The number of rows in the kernel (clumping window).
 	#' @param NNeighbors The number of neighbor cells to consider for potential habitat clumping.
 	#' @param maxDistance The maximum distance to look for neighbor cells.
 	#' @param queensCase Logical; if TRUE, considers all 8 directions for neighbors; if FALSE, only orthogonal.
@@ -22,7 +20,7 @@
 	#'
 	#' @return A list of matrices representing the state of the habitat matrix after each iteration.
 	#' @export
-	swf.molder <- function(Hmatrix, swfCover=0.10, swfCat, agriCat, Q, ExpPriority="mixed", ExpDirection="mixed", reduceQTo=0, iterations = 20, kernelCl=20, kernelRw=20, NNeighbors=0, maxDistance = 1, queensCase=FALSE, maxGDistance=1, np=1, deBug=FALSE) {
+	swf.molder <- function(Hmatrix, swfCover=0.10, swfCat, agriCat, Q, ExpPriority="mixed", ExpDirection="mixed", reduceQTo=0, iterations = 20, NNeighbors=0, maxDistance = 1, queensCase=FALSE, maxGDistance=1, np=1, deBug=FALSE) {
 
 		matrices.list <- list()
 		iteration = 0
