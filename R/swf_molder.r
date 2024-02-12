@@ -24,7 +24,8 @@
 
 		matrices.list <- list()
 		iteration = 0
-		SWFarea = length(which(Hmatrix%in%swfCat)) / length(which(Hmatrix%in%c(agriCat,swfCat)))
+		# SWFarea = length(which(Hmatrix%in%swfCat)) / length(which(Hmatrix%in%c(agriCat,swfCat)))
+		SWFarea = length( which(Hmatrix%in%swfCat[1]) ) / ( nrow(Hmatrix) * ncol(Hmatrix) )
 
 		while(iteration < iterations && SWFarea<swfCover) {
 			iteration=iteration+1
@@ -51,7 +52,7 @@
 					break
 					} else {
 						matrices.list[[iteration]] <- Hmatrix
-						SWFarea = length(which(Hmatrix%in%c(swfCat))) / length(which(Hmatrix%in%c(agriCat,swfCat)))
+						SWFarea = length( which(Hmatrix%in%swfCat[1]) ) / ( nrow(Hmatrix) * ncol(Hmatrix) )
 						message(paste("Iteration: ", iteration, "; SWF cover:", round(SWFarea,2)))
 					}
 

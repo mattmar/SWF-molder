@@ -39,7 +39,7 @@ findAndSelectNeighbors <- function(index, matrix, swfCat, agriCat, ExpPriority, 
     r <- index$row
     c <- index$col
 
-    if (matrix[r,c] == swfCat) {       
+    if (matrix[r,c] %in% swfCat) {       
         if ( countAgriNeighbors(r, c, matrix, agriCat, directions) >= NNeighbors ) {
             AgriCells <- findClosestAgriCells(matrix, c(r, c), agriCat, Q, maxGDistance, ExpPriority, ExpDirection)
             return(AgriCells)
