@@ -20,23 +20,23 @@
 	#'
 	#' @return A list of matrices representing the state of the habitat matrix after each iteration.
 	#' @export
-	swf.molder <- function(Hmatrix, swfCover=0.10, swfCat, agriCat, Q, ExpPriority="mixed", ExpDirection="mixed", reduceQTo=0, iterations = 20, NNeighbors=0, maxDistance = 1, queensCase=FALSE, maxGDistance=1, np=1, deBug=FALSE) {
+	swf.molder <- function(Hmatrix, swfCover=0.10, swfCat, agriCat, boundaryCat, agriW=NA, boundaryW=NA, Q, ExpPriority="mixed", ExpDirection="mixed", reduceQTo=0, iterations = 20, NNeighbors=0, maxDistance = 1, queensCase=FALSE, maxGDistance=1, np=1, deBug=FALSE) {
 
 		matrices.list <- list()
 		iteration = 0
 		# SWFarea = length(which(Hmatrix%in%swfCat)) / length(which(Hmatrix%in%c(agriCat,swfCat)))
-		SWFarea = length( which(Hmatrix%in%swfCat[1]) ) / ( nrow(Hmatrix) * ncol(Hmatrix) )
+		SWFarea = length( which(Hmatrix%in%swfCat) ) / ( nrow(Hmatrix) * ncol(Hmatrix) )
 
 		while(iteration < iterations && SWFarea<swfCover) {
 			iteration=iteration+1
 			
-			agri.cells = as.data.frame(which(Hmatrix == agriCat, arr.ind = TRUE)) # Finds coords with agriCat
+			agri.cells = as.data.frame(which(Hmatrix == agriCat | Hmatrix == boundaryCat, arr.ind = TRUE)) # Finds coords with agriCat and boundaryCat
 			swf.cells <- as.data.frame(which(Hmatrix == swfCat, arr.ind = TRUE)) # Finds coords with swfCat
 
 			if ( (nrow(swf.cells) != 0 ) ) { # Adds swf only if there is at least one swfCat pixel in the kernel
 			# Chose a gravity cell and allocated NN all at once!
 
-			allocated.cells <- findSwfCells(Hmatrix, swfCat, agriCat, NNeighbors, queensCase, maxDistance, maxGDistance, Q, reduceQTo, ExpPriority, ExpDirection, np)
+			allocated.cells <- findSwfCells(Hmatrix, swfCat, agriCat, boundaryCat, agriW, boundaryW, NNeighbors, queensCase, maxDistance, maxGDistance, Q, reduceQTo, ExpPriority, ExpDirection, np)
 
 			if ( !is.null(allocated.cells) && nrow(allocated.cells) >= 1 ) {
 				Hmatrix[as.matrix(allocated.cells)] <- swfCat

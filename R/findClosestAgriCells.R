@@ -6,7 +6,7 @@
 
 # ClosestDiagonalAgriCell(test, agri.pos, gravity.pos, 1, 2, 2, np=1)
 #' @export
-findClosestAgriCells <- function(matrix, targetPos, agriCat, Q, maxGDistance, ExpPriority, ExpDirection) {
+findClosestAgriCells <- function(matrix, targetPos, agriCat, boundaryCat, agriW, boundaryW, Q, maxGDistance, ExpPriority, ExpDirection) {
     nrows <- nrow(matrix)
     ncols <- ncol(matrix)
     r <- targetPos[1]
@@ -14,8 +14,8 @@ findClosestAgriCells <- function(matrix, targetPos, agriCat, Q, maxGDistance, Ex
     maxRadius <- ifelse(is.numeric(maxGDistance), maxGDistance, max(nrows, ncols))
 
     # Precompute the logical matrix for agriCat cells
-    agriCatMatrix <- matrix == agriCat
-    
+    agriCatMatrix <- matrix == agriCat | matrix == boundaryCat
+
     # Initialize variables
     selectedNeighbors <- data.frame(row = integer(), col = integer())
     radius <- 1
@@ -41,6 +41,20 @@ findClosestAgriCells <- function(matrix, targetPos, agriCat, Q, maxGDistance, Ex
 
     # Order and select closest neighbors
     orderedNeighbors <- orderCellsByDistance(newNeighbors, r, c, ExpPriority, ExpDirection)
-    closestNeighbors <- orderedNeighbors[1:min(nrow(orderedNeighbors), Q), ]
-    return(closestNeighbors)
-}
+    
+    if( !is.na(boundaryW) ) {
+        prob.lulc <- ifelse(matrix[as.matrix(orderedNeighbors)]==agriCat, agriW, boundaryW)!=0
+
+        if( any(prob.lulc) ) {
+            chosenNeighbors <- orderedNeighbors[sample.int(
+                    n=nrow(orderedNeighbors),
+                    size=min(Q,nrow(orderedNeighbors)),
+                    prob=ifelse(matrix[as.matrix(orderedNeighbors)]==agriCat, agriW, boundaryW)),]
+            } else { 
+                chosenNeighbors <- c()
+                } 
+            } else {
+                chosenNeighbors <- orderedNeighbors[1:min(nrow(orderedNeighbors), Q), ]
+            }
+            return(chosenNeighbors)
+        }
