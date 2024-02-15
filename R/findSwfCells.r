@@ -14,11 +14,12 @@ findSwfCells <- function(matrix, swfCat, agriCat, boundaryCat, agriW, boundaryW,
 
         indices <- expand.grid(row = 1:nrows, col = 1:ncols)
 
-        result <- parallel::mclapply(1:nrow(indices), function(i) {
+        result <- lapply(1:nrow(indices), function(i) {
+            # print(i)
             neighborsDF <- findAndSelectNeighbors(indices[i, ], matrix, swfCat, agriCat, boundaryCat, agriW, boundaryW, ExpPriority, ExpDirection, NNeighbors, directions, Q, maxGDistance)
             if( !is.null(dim(neighborsDF)) ) neighborsDF$index <- i
             return(neighborsDF)
-            }, mc.cores = np)
+            })
 
         allocatedCells <- result[which(sapply(result, function(x) !is.null(dim(x))))]
 
@@ -35,7 +36,6 @@ findSwfCells <- function(matrix, swfCat, agriCat, boundaryCat, agriW, boundaryW,
 }
 
 findAndSelectNeighbors <- function(index, matrix, swfCat, agriCat, boundaryCat, agriW, boundaryW, ExpPriority, ExpDirection, NNeighbors, directions, Q, maxGDistance) { # Function to find and select closest agriCat neighbors
-
     r <- index$row
     c <- index$col
 
@@ -53,6 +53,6 @@ countAgriNeighbors <- function(r, c, matrix, agriCat, boundaryCat, directions) {
     sum(sapply(1:nrow(directions), function(dir) {
         i <- r + directions[dir, "row"]
         j <- c + directions[dir, "col"]
-        i >= 1 && i <= nrow(matrix) && j >= 1 && j <= ncol(matrix) && matrix[i, j] == boundaryCat
+        i >= 1 && i <= nrow(matrix) && j >= 1 && j <= ncol(matrix) && matrix[i, j] %in% c(boundaryCat, agriCat)
         }))
 }

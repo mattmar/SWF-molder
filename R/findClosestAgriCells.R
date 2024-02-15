@@ -48,7 +48,7 @@ findClosestAgriCells <- function(matrix, targetPos, agriCat, boundaryCat, agriW,
         if( any(prob.lulc) ) {
             chosenNeighbors <- orderedNeighbors[sample.int(
                     n=nrow(orderedNeighbors),
-                    size=min(Q,nrow(orderedNeighbors)),
+                    size=min(Q,length(which(prob.lulc))),
                     prob=ifelse(matrix[as.matrix(orderedNeighbors)]==agriCat, agriW, boundaryW)),]
             } else { 
                 chosenNeighbors <- c()
