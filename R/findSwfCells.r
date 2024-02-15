@@ -7,14 +7,16 @@ findSwfCells <- function(matrix, swfCat, agriCat, boundaryCat, agriW, boundaryW,
     directions <- if (queensCase) { # Generate directions for neighbor checking
         expand.grid(row = -maxDistance:maxDistance, col = -maxDistance:maxDistance)
         } else {
-            rbind(cbind(-1:1, 0), cbind(0, -1:1))
+            rbind.data.frame(cbind(-1:1, 0), cbind(0, -1:1))
         }
 
         directions <- directions[!apply(directions, 1, function(x) all(x == 0)), ]
+        names(directions) <-c("row","col")
 
         indices <- expand.grid(row = 1:nrows, col = 1:ncols)
 
         result <- parallel::mclapply(1:nrow(indices), function(i) {
+
             neighborsDF <- findAndSelectNeighbors(indices[i, ], matrix, swfCat, agriCat, boundaryCat, agriW, boundaryW, ExpPriority, ExpDirection, NNeighbors, directions, Q, maxGDistance)
             if( !is.null(dim(neighborsDF)) ) neighborsDF$index <- i
             return(neighborsDF)
