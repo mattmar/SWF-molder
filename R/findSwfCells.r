@@ -14,12 +14,11 @@ findSwfCells <- function(matrix, swfCat, agriCat, boundaryCat, agriW, boundaryW,
 
         indices <- expand.grid(row = 1:nrows, col = 1:ncols)
 
-        result <- lapply(1:nrow(indices), function(i) {
-            # print(i)
+        result <- parallel::mclapply(1:nrow(indices), function(i) {
             neighborsDF <- findAndSelectNeighbors(indices[i, ], matrix, swfCat, agriCat, boundaryCat, agriW, boundaryW, ExpPriority, ExpDirection, NNeighbors, directions, Q, maxGDistance)
             if( !is.null(dim(neighborsDF)) ) neighborsDF$index <- i
             return(neighborsDF)
-            })
+            }, mc.cores=np)
 
         allocatedCells <- result[which(sapply(result, function(x) !is.null(dim(x))))]
 
