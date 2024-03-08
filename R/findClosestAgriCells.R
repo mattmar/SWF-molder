@@ -7,6 +7,7 @@
 # ClosestDiagonalAgriCell(test, agri.pos, gravity.pos, 1, 2, 2, np=1)
 #' @export
 findClosestAgriCells <- function(matrix, targetPos, agriCat, boundaryCat, agriW, boundaryW, Q, maxGDistance, ExpPriority, ExpDirection) {
+    # targetPos =c(81,8)
     nrows <- nrow(matrix)
     ncols <- ncol(matrix)
     r <- targetPos[1]
@@ -34,7 +35,6 @@ findClosestAgriCells <- function(matrix, targetPos, agriCat, boundaryCat, agriW,
 
         # Update selectedNeighbors
         newNeighbors <- data.frame(row = agriRows, col = agriCols, stringsAsFactors = FALSE)
-        # selectedNeighbors <- unique(rbind(selectedNeighbors, newNeighbors))
 
         radius <- radius + 1
     }
@@ -46,6 +46,22 @@ findClosestAgriCells <- function(matrix, targetPos, agriCat, boundaryCat, agriW,
         prob.lulc <- ifelse(matrix[as.matrix(orderedNeighbors)]==agriCat, agriW, boundaryW)!=0
 
         if( any(prob.lulc) ) {
+        # N_agri <- length(which(matrix[as.matrix(orderedNeighbors)] == agriCat)) +0.1
+        # N_boundary <- length(which(matrix[as.matrix(orderedNeighbors)] == boundaryCat)) +0.1
+
+        # # Calculate observed proportions
+        # P_agri <- N_agri / (N_agri + N_boundary)
+        # P_boundary <- N_boundary / (N_agri + N_boundary)
+
+        # # Adjust weights based on the inverse of observed proportions
+        # W_prime_agri <- agriW * (1 / P_agri)
+        # W_prime_boundary <- boundaryW * (1 / P_boundary)
+
+        # # Normalize adjusted weights to ensure they sum to 1 (or maintain their original sum)
+        # sum_W_prime <- W_prime_agri + W_prime_boundary
+        # W_agri <- W_prime_agri / sum_W_prime
+        # W_boundary <- W_prime_boundary / sum_W_prime
+
             chosenNeighbors <- orderedNeighbors[sample.int(
                     n=nrow(orderedNeighbors),
                     size=min(Q,length(which(prob.lulc))),
