@@ -1,4 +1,4 @@
-# Simulation of Habitat Growth and Connectivity Metrics Calculation (for each growing step) in a Landscape
+# Simulation of Habitat Growth and Connectivity Metrics Calculation (for each growing step) in an agricultural landscape.
 
 # Load libraries
 library(terra)
@@ -10,29 +10,30 @@ library(stats)
 library(landscapemetrics)
 library(igraph)
 
-# Load custom growing functions
+# Load custom growing functions (first set working directory to the correct GitHub folder)
+# setwd("SWF-molder")
 sapply(list.files("./growing_functions", full.names = TRUE), source, .GlobalEnv)
 
-# Load landscape raster
+# Load landscape raster. 1=SWF; 3=Filed boundary; 4=Field interior 
 landscape <- rast("./TestMatrix.tif")
 
 # Define fixed parameters for growth
 params <- list(
-  swfCover = 0.30,  # Target SWF coverage
-  iterations = 500,  # Maximum number of iterations
-  swfCat = 1,       # Cell value representing SWF
-  agriCat = 4,      # Cell value representing crop fields
-  boundaryCat = 3,  # Cell value representing crop boundaries
-  ExpPriority = "mixed", # preferred directional priority
-  ExpDirection = "mixed", # preferred direction 
-  NNeighbors = 1, # Number of agri neighbours a SWF cells must have to expand
-  maxDistance = 2, # Max distance (in pixel) from each SWF cell to look for agri neighbours
-  queensCase = TRUE,
-  np = detectCores() - 1,  # Parallel processes
-  deBug = FALSE,
-  gd = 3,  # Maximum search radius for growing SWF
-  qn = 1,  # Number of agri cells to expand for each SWF cell
-  rq = 0.50  # Proportion of SWF cells used for expansion at each iteration
+swfCover = 0.30,  # Target SWF coverage
+iterations = 500,  # Maximum number of iterations
+swfCat = 1,       # Cell value representing SWF
+agriCat = 4,      # Cell value representing crop fields
+boundaryCat = 3,  # Cell value representing crop boundaries
+ExpPriority = "mixed", # preferred directional priority
+ExpDirection = "mixed", # preferred direction 
+NNeighbors = 1, # Number of agri neighbours a SWF cells must have to expand
+maxDistance = 2, # Max distance (in pixel) from each SWF cell to look for agri neighbours
+queensCase = TRUE,
+np = detectCores() - 1,  # Parallel processes
+deBug = FALSE,
+gd = 3,  # Maximum search radius for growing SWF
+qn = 1,  # Number of agri cells to expand for each SWF cell
+rq = 0.50  # Proportion of SWF cells used for expansion at each iteration
 )
 
 # Define varying parameters for growth
@@ -40,47 +41,48 @@ weights <- c(0.05, 0.5, 0.99)  # Weights of boundary respect to interior (probab
 params.mt <- expand.grid(W = weights)
 
 # Prepare the initial landscape matrix
-landscapeMatrix <- t(as.matrix(landscape, wide = TRUE))
+landscapeMatrix <- t(as.matrix(unwrap(landscape), wide = TRUE))
 
 # Run growth simulation for each scenario
 results.lt <- mclapply(seq_len(nrow(params.mt)), function(idx) {
-  w <- params.mt[idx, "W"]
-  message("Boundary Weights: ", w, "\nagri Weights: ", 1 - w, "\n")
-  swf.molder(
-  	Hmatrix = landscapeMatrix, 
+	w <- params.mt[idx, "W"]
+	message("Boundary Weights: ", w, "\nagri Weights: ", 1 - w, "\n")
+	swf.molder(
+		Hmatrix = landscapeMatrix, 
 		swfCover = params$swfCover, 
 		swfCat = params$swfCat, 
 		agriCat = params$agriCat, 
 		boundaryCat = params$boundaryCat, 
-		agriW=1-w, # This is the only varying parameter 
-		boundaryW=w, # This is the only varying parameter
-		Q=params$qn, 
+		agriW = 1-w, # This is the only varying parameter 
+		boundaryW = w, # This is the only varying parameter
+		Q = params$qn, 
 		ExpPriority = params$ExpPriority, 
 		ExpDirection = params$ExpDirection, 
-		reduceQTo=params$rq, 
+		reduceQTo = params$rq, 
 		iterations = params$iterations, 
 		NNeighbors = params$NNeighbors, 
 		maxDistance = params$maxDistance, 
 		queensCase = params$queensCase, 
-		maxGDistance= params$gd, 
+		maxGDistance = params$gd, 
 		np = params$np)
-}, mc.cores = 2, mc.preschedule = FALSE)
+	}, mc.cores = 2, mc.preschedule = FALSE)
 
-# Visualize a selected scenario
+# Visualize a selected scenario at 4 points during the SWF growing process
 scenario <- 3  # Example with W=0.99
-nrows <- 8
-ncols <- ceiling(length(results.lt[[scenario]]) / nrows)
+nrows <- 2 # 8
+ncols <- 2 # ceiling(length(results.lt[[scenario]]) / nrows)
 
 par(mfrow = c(nrows, ncols))
-lapply(results.lt[[scenario]], function(i) {
-  plot(rast(i))
-})
+lapply(results.lt[[scenario]][c(1,25,40,50)], function(i) {
+	i<- ifelse(i==1, "SWF", ifelse(i==3, "Field boundary", ifelse(4, "Field interior"))) 
+	plot(rast(i))
+	})
 dev.off()
 
 # Calculate connectivity metrics (ECA) for each simulated matrix
 source("./connectivity_functions/connectivityMetricsV2.0.R")
 results.r <- mclapply(results.lt, connMetrics, simplify = TRUE, rasterRef = landscape, directions = 4, 
-                      minArea = 0.0026, d = 10, iLandscape = FALSE, np = 4, mc.cores = 2)
+	minArea = 0.0026, d = 10, iLandscape = FALSE, np = 4, mc.cores = 2)
 
 # Process and visualize ECA results
 resultsECA.df <- do.call(rbind.data.frame,
@@ -92,5 +94,7 @@ resultsECA.df <- do.call(rbind.data.frame,
 	}
 	)
 	)
+
+# Plot ECA ~ Coverage for the 3 different scenarios
 ggplot(resultsECA.df, aes(x = coverage, y = eca, group = scenario)) + 
-  geom_line(aes(color=as.factor(scenario)))
+geom_line(aes(color=as.factor(scenario)))
